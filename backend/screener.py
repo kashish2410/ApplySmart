@@ -1,4 +1,3 @@
-from sentence_transformers import SentenceTransformer, util
 from skill_extractor import extract_skills
 
 # Load model once — stays in memory, fast for all calls after first
