@@ -2,7 +2,9 @@ from sentence_transformers import SentenceTransformer, util
 from skill_extractor import extract_skills
 
 # Load model once — stays in memory, fast for all calls after first
-model = SentenceTransformer('all-MiniLM-L6-v2')
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 def get_verdict(score):
     if score >= 80:
@@ -15,22 +17,18 @@ def get_verdict(score):
         return "Weak Match"
 
 def screen(resume_text, jd_text):
-    # Step 1 — extract skills from both texts
     resume_skills = extract_skills(resume_text)
     jd_skills     = extract_skills(jd_text)
 
-    # Step 2 — find matched and missing skills
-    matched  = [s for s in jd_skills if s in resume_skills]
-    missing  = [s for s in jd_skills if s not in resume_skills]
-    partial  = [s for s in resume_skills if s not in jd_skills]
+    matched = [s for s in jd_skills if s in resume_skills]
+    missing = [s for s in jd_skills if s not in resume_skills]
+    partial = [s for s in resume_skills if s not in jd_skills]
 
-    # Step 3 — compute semantic similarity score
-    r_vec = model.encode(resume_text)
-    j_vec = model.encode(jd_text)
-    similarity = util.cos_sim(r_vec, j_vec).item()
+    # Lightweight TF-IDF similarity instead of sentence-transformers
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform([resume_text, jd_text])
+    similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
 
-    # Step 4 — calculate final score
-    # 60% weight on semantic similarity, 40% on skill overlap
     if len(jd_skills) > 0:
         skill_overlap = len(matched) / len(jd_skills)
     else:
@@ -38,7 +36,6 @@ def screen(resume_text, jd_text):
 
     final_score = round((similarity * 0.6 + skill_overlap * 0.4) * 100)
 
-    # Step 5 — build and return result
     return {
         "match_score"    : final_score,
         "verdict"        : get_verdict(final_score),
