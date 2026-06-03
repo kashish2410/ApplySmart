@@ -9,6 +9,7 @@ function App() {
   const [jd, setJd]               = useState("");
   const [result, setResult]       = useState(null);
   const [loading, setLoading]     = useState(false);
+  const [waitMessage, setWaitMessage] = useState("");
 
   async function handleSubmit() {
     if (!resume || !jd) {
@@ -17,9 +18,32 @@ function App() {
     }
     setLoading(true);
     setResult(null);
+    setWaitMessage("Analysing your resume...");
+
+    // After 5 seconds show a warming up message
+    const timer1 = setTimeout(() => {
+      setWaitMessage("Waking up the server — this takes ~50 seconds on first load...");
+    }, 5000);
+
+    // After 15 seconds reassure them
+    const timer2 = setTimeout(() => {
+      setWaitMessage("Still waking up — almost there, hang tight...");
+    }, 15000);
+
+    // After 30 seconds final message
+    const timer3 = setTimeout(() => {
+      setWaitMessage("Taking longer than usual — server is starting up, please wait...");
+    }, 30000);
+
     const data = await screenResume(resume, jd);
+
+    clearTimeout(timer1);
+    clearTimeout(timer2);
+    clearTimeout(timer3);
+
     setResult(data);
     setLoading(false);
+    setWaitMessage("");
   }
 
   function handleReset() {
@@ -64,6 +88,22 @@ function App() {
           >
             {loading ? "Analysing..." : "Check Fit"}
           </button>
+          
+          {waitMessage && (
+  <div style={{
+    marginTop: "12px",
+    padding: "12px",
+    background: "#fff8e6",
+    border: "1px solid #f0d080",
+    borderRadius: "8px",
+    fontSize: "14px",
+    color: "#7a5c00",
+    textAlign: "center"
+  }}>
+     {waitMessage}
+  </div>
+)}
+
         </div>
       ) : (
         <div className="results">
