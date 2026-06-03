@@ -8,7 +8,10 @@ app = FastAPI()
 # This allows your React frontend to call this backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://apply-smart-xi.vercel.app"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
